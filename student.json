@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "name": "devanshi",
+    "email": "devanshi@gamil.com",
+    "age": 21,
+    "subject": "chemistry",
+    "gender": "female"
+  },
+  {
+    "id": 2,
+    "name": "priya",
+    "email": "priya@gamil.com",
+    "age": 20,
+    "subject": "maths",
+    "gender": "female"
+  },
+  {
+    "id": 3,
+    "name": "sanjay",
+    "email": "sanjay@gamil.com",
+    "age": 25,
+    "subject": "english",
+    "gender": "male"
+  },
+  {
+    "id": 4,
+    "name": "vijay",
+    "email": "vijay@gmail.com",
+    "age": 24,
+    "subject": "hindi",
+    "gender": "male"
+  }
+]
