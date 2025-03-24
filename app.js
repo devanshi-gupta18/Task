@@ -1,79 +1,94 @@
 const express = require('express');
+const mysql=require('mysql2');
 const app = express();
-const fs = require('fs');
-const path = require('path');
 const PORT = 3000;
 
 app.use(express.json());
 
-const dataFile = path.join('./', 'student.json');
-function getData() {
-    return JSON.parse(fs.readFileSync(dataFile, 'utf8'));
-}
+// mysql connection
+const db=mysql.createConnection({
+    host:'localhost',
+    user:'root',
+    password:'root',
+    database:'studentDb'
+});
 
-function saveData(data){
-    fs.writeFileSync(dataFile, JSON.stringify(data, null, 2), 'utf8');
-}
+// connect to mysql
+db.connect(err=>{
+    if(err){
+        console.log('Datanae connection failed');
+    }
+    else{
+        console.log('Connected to MySql database');
+    }
+});
+
+
 // GET All student
 app.get('/student', (req, res) => {
-    res.json(getData());
-})
+    db.query('select * from students', (err, results) =>{
+        if(err){
+            return res.status(500).send(err);
+        }
+        res.json(results);
+    });
+});
 
 // GET ALL Student by id
 app.get('/student/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const student = getData().find(s => s.id === id);
-    if (student) {
-        res.json(student);
-    }
-    else {
-        res.status(404).send('Student not found');
-    }
+    const id=req.params.id;
+    db.query('select * from students where id=?', [id], (err, results)=>{
+        if(err){
+            return res.status(500).send(err);
+        }
+        if(results.length==0){
+            return res.status(404).send('Student not found');
+        }
+        res.json(results[0]);
+    });
 });
 
 // POST/ Student
 app.post('/student', (req, res) => {
-    const student = getData();
-    const newStudent = req.body;
-
-    if (student.length > 0) {
-        newStudent.id = student[student.length - 1].id + 1;
-    }
-    else {
-        newStudent.id = 1;
-    }
-
-    student.push(newStudent);
-    saveData(student);
-    res.status(201).json(newStudent);
+    const {name, email, age, subject, gender} = req.body;
+    db.query('insert into students (name, email, age, subject, gender) values(?, ?, ?, ?, ?)',
+        [name, email, age, subject, gender], (err, result) =>{
+            if(err){
+                return res.status(500).send(err);
+            }
+            elseP
+            res.status(201).json({id: result.insertId, name, email, age, subject, gender});
+        });
 });
 
 // PUT: Update student by id
 app.put('/student/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const student = getData();
-    const index = student.findIndex(s => s.id === id);
-
-    if (index === -1) {
-        return res.status(404).send('Student not found');
-    }
-
-    student[index] = { ...student[index], ...req.body };
-    saveData(student);
-    res.json(student[index]);
+    const id=req.params.id;
+    const{name, email, age, subject, gender} = req.body;
+    db.query('update student set name=?, email=?, age=?, subject=?, gender=? where id=?',
+        [name, email, age, subject, gender, id], (err, result) =>{
+            if(err){
+                return res.status(505).send(err);
+            }
+            if(result.affectedRows===0){
+                return res.status(404).send('Student not found');
+            }
+            res.json({message: 'Student updated'});
+        });
 });
 
 // delete student by id
 app.delete('/student/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    let students = getData();
-
-    const newStudents = students.filter(s => s.id !== id);
-    if (newStudents.length === students.length) {
-        return res.status(404).send('Student not found');
-    }
-    saveData(newStudents);
-    res.json({ message: 'Student deleted' });
+    const id=req.params.id;
+    db.query('delete from students where id = ?', [id], (err, result) =>{
+        if(err){
+            return res.status(500).send(err);
+        }
+        if(result.affectedRows===0){
+            return res.status(404).send('Student not found');
+        }
+        res.json({message: 'Student deleted'});
+    })
 });
 
 app.listen(PORT, () => {
